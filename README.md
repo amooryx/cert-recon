@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="./banner.svg" alt="cert-recon" width="800">
+</div>
+
 # Cert Recon
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
