@@ -7,17 +7,27 @@
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-> **TLS certificate intelligence gatherer — SAN extraction, expiry flags, passive crt.sh discovery.**
+> **Passive Certificate Transparency (CT) subdomain discovery.**
 
 ## Usage
 
 ```bash
-# Scan hosts for TLS cert info
-python cert_recon.py scan example.com api.example.com:8443
+# Passive discovery from crt.sh (asks for authorization confirmation)
+python cert_recon.py example.com --output certs.json
 
-# Passive discovery via crt.sh
-python cert_recon.py passive example.com --out certs.json
+# Skip the confirmation prompt only when authorized
+python cert_recon.py example.com --yes
 ```
+
+The target must be a DNS domain (not a URL, wildcard, IP address, or host:port).
+The tool makes one read-only HTTPS query to crt.sh and does not resolve or
+connect to discovered names. Results are certificate-name evidence only, not
+confirmation that a name currently exists in DNS or is reachable. Requests
+time out after 20 seconds; responses are limited to 5 MiB and 25,000
+certificates, with at most 100,000 name candidates processed and 10,000 names
+retained. The output marks when either processing limit truncates results.
+Failures return a non-zero exit status and are reported separately from
+discovery results.
 
 ## Disclaimer
 
