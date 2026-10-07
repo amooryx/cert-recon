@@ -93,7 +93,9 @@ def run(ctx):
     results_truncated = False
     candidate_limit_reached = False
     candidates_examined = 0
+    certificates_examined = 0
     for entry in entries:
+        certificates_examined += 1
         if not isinstance(entry, dict):
             continue
         for candidate in str(entry.get("name_value", "")).splitlines():
@@ -125,7 +127,8 @@ def run(ctx):
         {
             "source": SOURCE,
             "evidence": "Certificate Transparency certificate names; not DNS-verified",
-            "certificates_examined": len(entries),
+            "certificates_returned": len(entries),
+            "certificates_examined": certificates_examined,
             "name_candidates_examined": candidates_examined,
             "subdomains": results,
             "results_truncated": results_truncated,
@@ -133,7 +136,8 @@ def run(ctx):
         }
     )
     ctx.info(
-        f"{len(results)} unique names from {len(entries)} CT certificates"
+        f"{len(results)} unique names from {certificates_examined}"
+        f" of {len(entries)} returned CT certificates"
         + (" (processing limit reached; results may be incomplete)" if results_truncated else "")
     )
     if results:

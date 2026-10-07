@@ -46,6 +46,7 @@ class CertificateReconTests(unittest.TestCase):
         self.assertEqual(ctx.data["source"], cert_recon.SOURCE)
         self.assertIn("not DNS-verified", ctx.data["evidence"])
         self.assertEqual(ctx.data["certificates_examined"], 3)
+        self.assertEqual(ctx.data["certificates_returned"], 3)
         request, = urlopen.call_args.args
         self.assertIn("q=%25.example.com", request.full_url)
         self.assertEqual(urlopen.call_args.kwargs["timeout"], cert_recon.REQUEST_TIMEOUT_SECONDS)
@@ -76,8 +77,29 @@ class CertificateReconTests(unittest.TestCase):
                 self.assertEqual(cert_recon.run(ctx), 0)
         self.assertEqual(ctx.data["subdomains"], ["a.example.com"])
         self.assertEqual(ctx.data["name_candidates_examined"], 1)
+        self.assertEqual(ctx.data["certificates_examined"], 1)
+        self.assertEqual(ctx.data["certificates_returned"], 1)
         self.assertTrue(ctx.data["candidate_limit_reached"])
         self.assertTrue(ctx.data["results_truncated"])
+
+    @patch("cert_recon.urllib.request.urlopen")
+    def test_certificate_count_reports_only_records_examined_before_candidate_cap(self, urlopen):
+        urlopen.return_value = self.response(
+            json.dumps(
+                [
+                    {"name_value": "a.example.com\nb.example.com"},
+                    {"name_value": "c.example.com"},
+                ]
+            ).encode()
+        )
+        ctx = self.make_context("example.com")
+        with patch.object(cert_recon, "MAX_NAME_CANDIDATES", 1):
+            with patch("sys.stdout", new_callable=io.StringIO):
+                self.assertEqual(cert_recon.run(ctx), 0)
+        self.assertEqual(ctx.data["certificates_examined"], 1)
+        self.assertEqual(ctx.data["certificates_returned"], 2)
+        self.assertEqual(ctx.data["name_candidates_examined"], 1)
+        self.assertTrue(ctx.data["candidate_limit_reached"])
 
     @patch("cert_recon.urllib.request.urlopen")
     def test_http_failure_is_reported_without_exception_details(self, urlopen):
